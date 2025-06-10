@@ -1,5 +1,8 @@
 # 🏢 IT 운영실 출입관리시스템
 
+![image](https://github.com/user-attachments/assets/43079b10-cd76-4c5f-9cdd-30268d5b85ea)
+
+
 ## 📖 프로젝트 소개
 
 IT회사 운영실(서버실)의 외부인 출입을 체계적으로 관리하기 위한 웹 기반 출입관리 시스템입니다. 
