@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>운영실 출입관리 - 책임자 확인</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-bg-color: #1a253c;
+      --main-bg-color: #f4f7fc;
+      --card-bg-color: #ffffff;
+      --primary-accent-color: #4a6cf7;
+      --text-color-light: #f8f9fa;
+      --text-color-dark: #343a40;
+      --text-color-muted: #6c757d;
+    }
+
+    body, html {
+      height: 100%;
+      margin: 0;
+      background-color: var(--main-bg-color);
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .main-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background-color: var(--sidebar-bg-color);
+      color: var(--text-color-light);
+      padding: 40px 0px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+
+    .sidebar a {
+        text-decoration: none;
+        color: var(--text-color-light);
+    }
+
+    .sidebar h2 {
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+    
+    .sidebar p {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .sidebar-submenu a {
+      display: block;
+      width: 100%;                /* 전체 폭 채움 */
+      color: #f8f9fa;
+      text-decoration: none;
+      padding: 10px 0 10px 52px;  /* 왼쪽은 들여쓰기, 오른쪽은 0 */
+      box-sizing: border-box;
+      transition: background-color 0.2s ease;
+    }
+
+    .sidebar-submenu a:hover,
+    .sidebar-submenu a.active {
+      background-color: rgba(255, 255, 255, 0.25);
+      font-weight: bold;
+    }    
+    
+    .content-area {
+      flex-grow: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .content-card {
+      background-color: var(--card-bg-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 40px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .content-card h2 {
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+      color: var(--text-color-dark);
+    }
+    
+    .table thead {
+        background-color: #e9ecef;
+    }
+    
+    .form-control, .form-select {
+        background-color: #f8f9fa;
+    }
+
+    .selected-count {
+      color: var(--primary-accent-color);
+      font-weight: 500;
+      margin-left: 10px;
+    }
+    
+    /* 서명 패드 스타일 */
+    .signature-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .signature-pad {
+      border: 2px dashed #dee2e6;
+      border-radius: 5px;
+      cursor: crosshair;
+      background-color: #ffffff;
+      width: 100%;
+      height: 120px;
+      transition: border-color 0.3s;
+    }
+
+    .signature-pad:hover {
+      border-color: #4a6cf7;
+    }
+    
+    .signature-pad.signing {
+      border-color: #4a6cf7;
+      border-style: solid;
+    }
+
+    .signature-controls {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .signature-hint {
+      font-size: 0.85rem;
+      color: var(--text-color-muted);
+    }
+
+    .clear-signature {
+      background: none;
+      border: none;
+      color: #dc3545;
+      font-size: 0.85rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .clear-signature:hover {
+      color: #c82333;
+    }
+    
+    /* NFC 스타일 */
+    .nfc-container {
+      background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+      color: white;
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px; /* 아래 요소와 간격 */
+      box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+    }
+
+    .nfc-button {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: white;
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nfc-button:hover {
+      background: rgba(255, 255, 255, 0.3);
+      border-color: rgba(255, 255, 255, 0.6);
+    }
+
+    .nfc-status {
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
+    .nfc-message {
+      margin-top: 10px;
+      border-radius: 4px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+
+    @media (max-width: 992px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        padding: 20px;
+      }
+      .content-area {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="sidebar">
+      <a href="index.html">
+        <h2>운영실 출입관리</h2>
+        <p>Access Management System</p>
+      </a>
+      <div style="margin-top: 20px; font-size: 1.2rem; text-align: left; width: 100%;">
+        <ul class="list-unstyled sidebar-submenu">
+          <li><a href="/register.html">ㆍ출입 등록</a></li>
+          <li><a href="/exit.html" >ㆍ퇴실 등록</a></li>
+          <li><a href="/verify.html" class="active">ㆍ책임자 확인</a></li>
+          <li><a href="#" onclick="goToSettings()">ㆍ설정</a></li>
+        </ul>  
+      </div>         
+    </div>
+    <div class="content-area">
+      <div class="content-card">
+        <h2>책임자 확인</h2>
+
+        <fieldset class="border p-3 mb-4">
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">출입 기록 조회</legend>
+            <div class="d-flex align-items-center">
+                <label for="queryDate" class="form-label me-2 mb-0">조회일:</label>
+                <input type="date" id="queryDate" class="form-control" style="width: auto;">
+                <button class="btn btn-primary ms-2" id="searchBtn">조회</button>
+            </div>
+        </fieldset>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <button class="btn btn-outline-primary btn-sm" id="selectAllBtn">전체 선택</button>
+                <button class="btn btn-outline-secondary btn-sm ms-1" id="deselectAllBtn">전체 해제</button>
+                <span class="selected-count" id="selectedCount">선택된 항목: 0개</span>
+            </div>
+        </div>
+        
+        <div class="table-responsive mb-4">
+            <table class="table table-bordered table-hover">
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="text-center">
+                    <input type="checkbox" class="form-check-input" id="masterCheckbox">
+                  </th>
+                  <th scope="col">출입자</th>
+                  <th scope="col">소속</th>
+                  <th scope="col">출입일</th>
+                  <th scope="col">입실시간</th>
+                  <th scope="col">퇴실시간</th>
+                  <th scope="col">출입사유</th>
+                  <th scope="col">확인여부</th>
+                </tr>
+              </thead>
+              <tbody id="logTableBody">
+                <tr>
+                  <td colspan="8" class="text-center">조회 버튼을 눌러주세요.</td>
+                </tr>
+              </tbody>
+            </table>
+        </div>
+
+        <fieldset class="border p-3">
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">확인자 정보 입력</legend>
+            
+            <div class="nfc-container" id="nfcContainer">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span><i class="fas fa-credit-card"></i> 확인자 사원증 자동 입력</span>
+                  <div>
+                    <button type="button" id="nfcStartBtn" onclick="startNFC()" class="nfc-button">
+                      <i class="fas fa-wifi"></i> 카드 태그
+                    </button>
+                    <button type="button" id="nfcStopBtn" onclick="stopNFC()" class="nfc-button" style="display: none;">
+                      <i class="fas fa-stop"></i> 중지
+                    </button>
+                  </div>
+                </div>
+                <div id="nfcStatus" class="nfc-status"></div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label for="checkerName" class="form-label">확인 책임자 이름</label>
+                    <input type="text" class="form-control" id="checkerName">
+                </div>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <label for="checkerTeam" class="form-label">소속 팀</label>
+                    <select class="form-select" id="checkerTeam">
+                      <option value="보안팀">보안팀</option>
+                      <option value="시스템팀">시스템팀</option>
+                      <option value="IT운영팀">IT운영팀</option>
+                      <option value="IT자체감사팀">IT자체감사팀</option>
+                      <option value="네트워크팀">네트워크팀</option>
+                      <option value="데이터팀">데이터팀</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="checkerSign" class="form-label">책임자 서명</label>
+                    <div class="signature-container">
+                        <canvas class="signature-pad" id="checkerSignaturePad"></canvas>
+                        <div class="signature-controls">
+                            <span class="signature-hint">마우스로 서명</span>
+                            <button type="button" class="clear-signature" onclick="clearSignature('checkerSignaturePad')">지우기</button>
+                        </div>
+                    </div>
+                    <input type="hidden" id="checkerSignatureData">
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <button class="btn btn-success" id="saveBtn">선택된 항목 확인 완료</button>
+            </div>
+        </fieldset>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedLogIds = [];
+    let currentLogData = [];
+    
+    // 📡 NFC 카드 리더 변수
+    let nfcPolling = false;
+    let nfcInterval = null;
+
+    // 페이지 로드 시 오늘 날짜로 설정 및 서명 패드 초기화
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('queryDate').valueAsDate = new Date();
+        initSignaturePad('checkerSignaturePad');
+    });
+    
+    // 페이지 종료시 NFC 중지
+    window.addEventListener('beforeunload', () => {
+      stopNFC();
+    });
+
+    /**
+     * === 이름 마스킹 함수 추가 ===
+     * 이름을 받아 중간 글자를 *로 바꿉니다.
+     * @param {string} name - 마스킹할 이름
+     * @returns {string} 마스킹된 이름
+     */
+    function maskName(name) {
+      if (!name || name.length <= 1) {
+        return name;
+      }
+      // 이름이 2글자인 경우
+      if (name.length === 2) {
+        return name[0] + '*';
+      }
+      // 이름이 3글자 이상인 경우 (첫 글자와 마지막 글자만 빼고 모두 * 처리)
+      const middle = '*'.repeat(name.length - 2);
+      return name[0] + middle + name[name.length - 1];
+    }
+
+    // --- NFC 관련 함수 시작 ---
+    async function startNFC() {
+      if (nfcPolling) return;
+      try {
+        const response = await fetch('http://localhost:8080/nfc/status');
+        if (!response.ok) throw new Error('연결 실패');
+        
+        nfcPolling = true;
+        document.getElementById('nfcStartBtn').style.display = 'none';
+        document.getElementById('nfcStopBtn').style.display = 'inline-block';
+        document.getElementById('nfcStatus').textContent = '카드를 리더기에 태그해주세요...';
+        document.getElementById('nfcStatus').style.color = '#fff';
+        
+        nfcInterval = setInterval(checkForCard, 1000);
+      } catch (error) {
+        alert('Python NFC 서비스가 실행되지 않았습니다.\n서비스를 먼저 실행해주세요. (python simple_nfc_web.py)');
+        console.error('NFC 시작 오류:', error);
+      }
+    }
+
+    function stopNFC() {
+      nfcPolling = false;
+      if (nfcInterval) {
+        clearInterval(nfcInterval);
+        nfcInterval = null;
+      }
+      document.getElementById('nfcStartBtn').style.display = 'inline-block';
+      document.getElementById('nfcStopBtn').style.display = 'none';
+      document.getElementById('nfcStatus').textContent = '';
+    }
+
+    async function checkForCard() {
+      if (!nfcPolling) return;
+      try {
+        const response = await fetch('http://localhost:8080/nfc/latest');
+        const data = await response.json();
+        
+        if (data.cardId) {
+          if (data.success && data.employee) {
+            document.getElementById('checkerName').value = data.employee.name;
+            document.getElementById('checkerTeam').value = data.employee.team;
+            
+            showNFCMessage(`✅ ${data.employee.name}님 확인자 정보가 입력되었습니다.`, 'success');
+            stopNFC();
+          } else {
+            showNFCMessage(`⚠️ 등록되지 않은 카드입니다 (ID: ${data.cardId})`, 'error');
+          }
+        }
+      } catch (error) {
+        console.error('카드 확인 오류:', error);
+      }
+    }
+
+    function showNFCMessage(message, type) {
+      const existingMsg = document.querySelector('.nfc-message');
+      if (existingMsg) existingMsg.remove();
+      
+      let alertClass, iconClass;
+      switch(type) {
+        case 'success': alertClass = 'alert-success'; iconClass = 'check-circle'; break;
+        case 'warning': alertClass = 'alert-warning'; iconClass = 'exclamation-triangle'; break;
+        default: alertClass = 'alert-danger'; iconClass = 'exclamation-triangle'; break;
+      }
+      
+      const msgDiv = document.createElement('div');
+      msgDiv.className = `alert nfc-message ${alertClass}`;
+      msgDiv.innerHTML = `<i class="fas fa-${iconClass}"></i> ${message.replace(/\n/g, '<br>')}`;
+      document.getElementById('nfcContainer').appendChild(msgDiv);
+      
+      setTimeout(() => { if (msgDiv.parentNode) msgDiv.remove(); }, 3000);
+    }
+    // --- NFC 관련 함수 종료 ---
+
+
+    // --- 서명 패드 관련 함수 시작 ---
+    function initSignaturePad(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      function startDrawing(e) {
+        isDrawing = true;
+        canvas.classList.add('signing');
+        [lastX, lastY] = getMousePos(canvas, e);
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        const [currentX, currentY] = getMousePos(canvas, e);
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(currentX, currentY);
+        ctx.stroke();
+        [lastX, lastY] = [currentX, currentY];
+        updateSignatureData(canvasId);
+      }
+
+      function stopDrawing() {
+        if (!isDrawing) return;
+        isDrawing = false;
+        canvas.classList.remove('signing');
+        updateSignatureData(canvasId);
+      }
+      
+      function handleTouch(e) {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const mouseEvent = new MouseEvent(e.type.startsWith('touch') ? 
+          (e.type === 'touchstart' ? 'mousedown' : 'mousemove') : 'mouseup', 
+          { clientX: touch.clientX, clientY: touch.clientY });
+        canvas.dispatchEvent(mouseEvent);
+      }
+
+      function getMousePos(canvas, e) {
+        const rect = canvas.getBoundingClientRect();
+        return [e.clientX - rect.left, e.clientY - rect.top];
+      }
+
+      canvas.addEventListener('mousedown', startDrawing);
+      canvas.addEventListener('mousemove', draw);
+      canvas.addEventListener('mouseup', stopDrawing);
+      canvas.addEventListener('mouseout', stopDrawing);
+      
+      canvas.addEventListener('touchstart', handleTouch);
+      canvas.addEventListener('touchmove', handleTouch);
+      canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function updateSignatureData(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const dataURL = canvas.toDataURL('image/png');
+      document.getElementById('checkerSignatureData').value = dataURL;
+    }
+
+    function clearSignature(canvasId) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById('checkerSignatureData').value = '';
+    }
+    // --- 서명 패드 관련 함수 종료 ---
+
+
+    // 선택된 항목 수 업데이트
+    function updateSelectedCount() {
+      document.getElementById('selectedCount').textContent = `선택된 항목: ${selectedLogIds.length}개`;
+    }
+
+    // 마스터 체크박스 상태 업데이트
+    function updateMasterCheckbox() {
+      const masterCheckbox = document.getElementById('masterCheckbox');
+      const availableItems = currentLogData.filter(item => !item.checker_name);
+      const selectedAvailableItems = selectedLogIds.filter(id => 
+        availableItems.some(item => item.id == id)
+      );
+      
+      if (availableItems.length === 0) {
+        masterCheckbox.indeterminate = false;
+        masterCheckbox.checked = false;
+        masterCheckbox.disabled = true;
+      } else if (selectedAvailableItems.length === 0) {
+        masterCheckbox.indeterminate = false;
+        masterCheckbox.checked = false;
+        masterCheckbox.disabled = false;
+      } else if (selectedAvailableItems.length === availableItems.length) {
+        masterCheckbox.indeterminate = false;
+        masterCheckbox.checked = true;
+        masterCheckbox.disabled = false;
+      } else {
+        masterCheckbox.indeterminate = true;
+        masterCheckbox.checked = false;
+        masterCheckbox.disabled = false;
+      }
+    }
+
+    // 조회 버튼 클릭 이벤트
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      stopNFC(); // 조회 시 NFC 중지
+      const date = document.getElementById('queryDate').value;
+      if (!date) {
+        alert('조회할 날짜를 선택해주세요.');
+        return;
+      }
+      fetch(`/api/logs?date=${date}`)
+        .then(res => res.json())
+        .then(data => {
+          currentLogData = data;
+          const tbody = document.getElementById('logTableBody');
+          tbody.innerHTML = ''; // 테이블 내용 초기화
+          selectedLogIds = []; // 선택 초기화
+          updateSelectedCount();
+
+          if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center">해당 날짜의 출입 기록이 없습니다.</td></tr>';
+            updateMasterCheckbox();
+            return;
+          }
+
+          data.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.style.cursor = 'pointer';
+            
+            const entryDateTime = new Date(item.entry_time);
+            const entryDate = entryDateTime.toLocaleDateString('ko-KR');
+            const entryTime = entryDateTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+            const exitTime = item.exit_time 
+                ? new Date(item.exit_time).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) 
+                : '-';
+            
+            const isVerified = item.checker_name ? `<span class="badge bg-success">확인완료</span>` : `<span class="badge bg-warning text-dark">미확인</span>`;
+
+            tr.innerHTML = `
+              <td class="text-center"><input type="checkbox" class="form-check-input log-checkbox" data-log-id="${item.id}" ${item.checker_name ? 'disabled' : ''}></td>
+              <td>${maskName(item.name)}</td>
+              <td>${item.company}</td>
+              <td>${entryDate}</td>
+              <td>${entryTime}</td>
+              <td>${exitTime}</td>
+              <td>${item.reason}</td>
+              <td class="text-center">${isVerified}</td>
+            `;
+            tbody.appendChild(tr);
+            
+            // 행 전체 클릭 시 체크박스 토글
+            tr.addEventListener('click', (e) => {
+                if(e.target.type !== 'checkbox' && !item.checker_name) {
+                    const checkbox = tr.querySelector('.log-checkbox');
+                    checkbox.click();
+                }
+            });
+          });
+
+          // 개별 체크박스 이벤트 리스너 추가
+          document.querySelectorAll('.log-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', e => {
+              const logId = e.target.dataset.logId;
+              if (e.target.checked) {
+                if (!selectedLogIds.includes(logId)) {
+                  selectedLogIds.push(logId);
+                }
+              } else {
+                selectedLogIds = selectedLogIds.filter(id => id !== logId);
+              }
+              updateSelectedCount();
+              updateMasterCheckbox();
+            });
+          });
+
+          updateMasterCheckbox();
+        })
+        .catch(error => {
+            console.error('Error fetching logs:', error);
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-danger">기록을 불러오는 중 오류가 발생했습니다.</td></tr>';
+        });
+    });
+
+    // 마스터 체크박스 이벤트
+    document.getElementById('masterCheckbox').addEventListener('change', function() {
+      const isChecked = this.checked;
+      const availableCheckboxes = document.querySelectorAll('.log-checkbox:not(:disabled)');
+      
+      availableCheckboxes.forEach(checkbox => {
+        checkbox.checked = isChecked;
+        const logId = checkbox.dataset.logId;
+        if (isChecked) {
+          if (!selectedLogIds.includes(logId)) {
+            selectedLogIds.push(logId);
+          }
+        } else {
+          selectedLogIds = selectedLogIds.filter(id => id !== logId);
+        }
+      });
+      
+      updateSelectedCount();
+    });
+
+    // 전체 선택 버튼
+    document.getElementById('selectAllBtn').addEventListener('click', () => {
+      const availableCheckboxes = document.querySelectorAll('.log-checkbox:not(:disabled)');
+      availableCheckboxes.forEach(checkbox => {
+        checkbox.checked = true;
+        const logId = checkbox.dataset.logId;
+        if (!selectedLogIds.includes(logId)) {
+          selectedLogIds.push(logId);
+        }
+      });
+      updateSelectedCount();
+      updateMasterCheckbox();
+    });
+
+    // 전체 해제 버튼
+    document.getElementById('deselectAllBtn').addEventListener('click', () => {
+      const availableCheckboxes = document.querySelectorAll('.log-checkbox:not(:disabled)');
+      availableCheckboxes.forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      selectedLogIds = [];
+      updateSelectedCount();
+      updateMasterCheckbox();
+    });
+
+    // 저장 버튼 클릭 이벤트
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      stopNFC(); // 저장 시도 시 NFC 중지
+      const name = document.getElementById('checkerName').value;
+      const team = document.getElementById('checkerTeam').value;
+      const sign = document.getElementById('checkerSignatureData').value;
+
+      if (selectedLogIds.length === 0) {
+        alert('확인할 출입 기록을 선택하세요.');
+        return;
+      }
+      if (!name) {
+        alert('책임자 이름을 입력하세요.');
+        return;
+      }
+      if (!sign) {
+        alert('책임자 서명을 입력하세요.');
+        return;
+      }
+
+      const confirmMessage = `선택된 ${selectedLogIds.length}개 항목에 대해 책임자 확인을 진행하시겠습니까?`;
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+
+      try {
+        let successCount = 0;
+        let failCount = 0;
+        
+        // 선택된 모든 항목에 대해 순차적으로 처리
+        for (const logId of selectedLogIds) {
+          try {
+            const response = await fetch(`/api/verify/${logId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                checker_name: name,
+                checker_team: team,
+                checker_sign: sign
+              })
+            });
+
+            if (response.ok) {
+              successCount++;
+            } else {
+              failCount++;
+              console.error(`Failed to verify log ${logId}`);
+            }
+          } catch (error) {
+            failCount++;
+            console.error(`Error verifying log ${logId}:`, error);
+          }
+        }
+
+        // 결과 알림
+        if (successCount > 0 && failCount === 0) {
+          alert(`총 ${successCount}개 항목의 책임자 확인이 완료되었습니다.`);
+        } else if (successCount > 0 && failCount > 0) {
+          alert(`${successCount}개 항목 확인 완료, ${failCount}개 항목 실패했습니다.`);
+        } else {
+          alert('모든 항목의 확인이 실패했습니다. 다시 시도해주세요.');
+        }
+
+        clearSelectionAndForm();
+        document.getElementById('searchBtn').click(); // 목록 새로고침
+      } catch (error) {
+        console.error('Error on verify:', error);
+        alert('저장 중 오류가 발생했습니다.');
+      }
+    });
+
+    // 선택 해제 및 입력 초기화 함수
+    function clearSelectionAndForm() {
+      selectedLogIds = [];
+      document.getElementById('checkerName').value = '';
+      clearSignature('checkerSignaturePad'); // 서명 지우기
+      
+      const checkboxes = document.querySelectorAll('.log-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.checked = false;
+      });
+      
+      updateSelectedCount();
+      updateMasterCheckbox();
+    }
+
+    // ✅ [추가] 설정 페이지 이동 시 비밀번호를 묻는 함수
+    async function goToSettings() {
+      const enteredPassword = prompt('설정 페이지에 접근하려면 비밀번호를 입력하세요.');
+
+      // 사용자가 '취소'를 누르거나 아무것도 입력하지 않은 경우 함수 종료
+      if (!enteredPassword) {
+        return;
+      }
+
+      try {
+        // 서버의 /api/login 으로 비밀번호 확인 요청
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ password: enteredPassword }),
+        });
+
+        if (response.ok) {
+          // 인증 성공 시, settings.html이 접근을 허용하도록 sessionStorage에 플래그 저장
+          sessionStorage.setItem('settings_access_granted', 'true');
+          // settings.html 페이지로 이동
+          window.location.href = '/settings.html';
+        } else {
+          // 인증 실패 시 서버가 보낸 에러 메시지 표시
+          const result = await response.json();
+          alert(result.message || '인증에 실패했습니다.');
+        }
+      } catch (error) {
+        console.error('로그인 요청 오류:', error);
+        alert('서버와 통신 중 오류가 발생했습니다. 서버가 실행 중인지 확인해 주세요.');
+      }
+    }  
+
+  </script>
+</body>
+</html>

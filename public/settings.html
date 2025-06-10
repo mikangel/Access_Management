@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>운영실 출입관리 - 설정 및 인쇄</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-bg-color: #1a253c;
+      --main-bg-color: #f4f7fc;
+      --card-bg-color: #ffffff;
+      --primary-accent-color: #4a6cf7;
+      --text-color-light: #f8f9fa;
+      --text-color-dark: #343a40;
+      --text-color-muted: #6c757d;
+    }
+
+    body, html {
+      height: 100%;
+      margin: 0;
+      background-color: var(--main-bg-color);
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .main-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background-color: var(--sidebar-bg-color);
+      color: var(--text-color-light);
+      padding: 40px 0px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar a {
+        text-decoration: none;
+        color: var(--text-color-light);
+    }
+
+    .sidebar h2 {
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+    
+    .sidebar p {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .sidebar-submenu a {
+      display: block;
+      width: 100%;
+      color: #f8f9fa;
+      text-decoration: none;
+      padding: 10px 0 10px 52px;
+      box-sizing: border-box;
+      transition: background-color 0.2s ease;
+    }
+
+    .sidebar-submenu a:hover,
+    .sidebar-submenu a.active {
+      background-color: rgba(255, 255, 255, 0.25);
+      font-weight: bold;
+    }        
+    
+    .content-area {
+      flex-grow: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .content-card {
+      background-color: var(--card-bg-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 40px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .content-card h2 {
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+      color: var(--text-color-dark);
+    }
+    
+    .form-control, .form-select {
+        background-color: #f8f9fa;
+    }
+    
+    .hidden { 
+        display: none; 
+    }
+
+    .signature-img {
+        width: 100px;
+        height: 50px;
+        object-fit: contain;
+    }
+    
+    /* =========== [수정된 부분] 테이블 중앙 정렬 스타일 추가 =========== */
+    #reportResult .table th,
+    #reportResult .table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+    /* ========================================================== */
+
+    @media (max-width: 992px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        padding: 20px;
+      }
+      .content-area {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="sidebar">
+      <a href="index.html">
+        <h2>운영실 출입관리</h2>
+        <p>Access Management System</p>
+      </a>
+      <div style="margin-top: 20px; font-size: 1.2rem; text-align: left; width: 100%;">
+        <ul class="list-unstyled sidebar-submenu">
+          <li><a href="/register.html">ㆍ출입 등록</a></li>
+          <li><a href="/exit.html" >ㆍ퇴실 등록</a></li>
+          <li><a href="/verify.html" >ㆍ책임자 확인</a></li>
+          <li><a href="/settings.html" class="active">ㆍ설정</a></li>
+        </ul>  
+      </div>         
+    </div>
+    <div class="content-area">
+      <div class="content-card">
+        <h2>설정 및 인쇄</h2>
+
+        <fieldset class="border p-3 mb-4">
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">데이터베이스 백업 (MySQL)</legend>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="dbHost" class="form-label">DB 호스트</label>
+                    <input type="text" id="dbHost" class="form-control" value="127.0.0.1">
+                </div>
+                <div class="col-md-6">
+                    <label for="dbName" class="form-label">DB 이름</label>
+                    <input type="text" id="dbName" class="form-control" value="access_log">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="dbUser" class="form-label">DB 사용자명</label>
+                    <input type="text" id="dbUser" class="form-control" value="root">
+                </div>
+                <div class="col-md-6">
+                    <label for="dbPassword" class="form-label">DB 비밀번호</label>
+                    <input type="password" id="dbPassword" class="form-control">
+                </div>
+            </div>
+             <div class="mb-3">
+                <label for="backupTable" class="form-label">백업 대상 테이블</label>
+                <input type="text" id="backupTable" class="form-control" value="">
+            </div>
+            <div class="mb-3">
+              <label for="backupPath" class="form-label">백업 파일 저장 경로 (폴더)</label>
+              <input type="text" id="backupPath" class="form-control" value="/home/user1/workspace/simple-table/backup">
+            </div>
+
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="checkbox" id="encryptBackup">
+              <label class="form-check-label" for="encryptBackup">백업 파일 암호화 (민감 정보 포함 시 권장)</label>
+            </div>
+            <div class="mb-3 hidden" id="encryptionKeyContainer">
+              <label for="encryptionKey" class="form-label">암호화 키</label>
+              <input type="password" id="encryptionKey" class="form-control" placeholder="암호화에 사용할 키를 입력하세요">
+            </div>
+
+            <hr>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted" id="lastBackupStatus">최근 백업: 기록 없음</span>
+                <button class="btn btn-success" id="manualBackupBtn">수동 백업 실행</button>
+            </div>
+        </fieldset>
+
+        <fieldset class="border p-3 mb-4">
+          <legend class="float-none w-auto px-2 fs-6 fw-bold">설정 페이지 비밀번호 변경</legend>
+          <div class="mb-3">
+            <label for="currentPassword" class="form-label">현재 비밀번호</label>
+            <input type="password" id="currentPassword" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="newPassword" class="form-label">새 비밀번호</label>
+            <input type="password" id="newPassword" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label for="confirmPassword" class="form-label">새 비밀번호 확인</label>
+            <input type="password" id="confirmPassword" class="form-control">
+          </div>
+          <hr>
+          <div class="text-center">
+            <button class="btn btn-danger" id="changePasswordBtn">비밀번호 변경</button>
+          </div>
+        </fieldset>
+    
+        <fieldset class="border p-3 mb-4">
+            <legend class="float-none w-auto px-2 fs-6 fw-bold">보고서 인쇄</legend>
+            <div class="row align-items-end mb-3">
+              <div class="col-md-4">
+                <label for="startDate" class="form-label">조회 시작일</label>
+                <input type="date" id="startDate" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <label for="endDate" class="form-label">조회 종료일</label>
+                <input type="date" id="endDate" class="form-control">
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-primary w-100" id="reportBtn">보고서 내용 조회</button>
+              </div>
+            </div>
+             <hr>
+            <div class="text-center">
+              <button class="btn btn-info" id="printPreviewBtn">📄 인쇄 미리보기</button>
+            </div>
+        </fieldset>
+        
+        <div class="hidden" id="reportResult">
+          <hr>
+          <h5>📋 조회 결과</h5>
+          <div class="table-responsive">
+            <table class="table table-bordered">
+              <thead class="table-light">
+                <tr>
+                  <th>연번</th>
+                  <th>출입자 이름</th>
+                  <th>출입자 서명</th>
+                  <th>소속(회사명)</th>
+                  <th>입실시간</th>
+                  <th>퇴실시간</th>
+                  <th>출입사유</th>
+                  <th>입회자 이름</th>
+                  <th>입회자 소속</th>
+                  <th>입회 서명</th>
+                  <th>책임자 확인</th>
+                  <th>책임자 서명</th>
+                </tr>
+              </thead>
+              <tbody id="reportTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      if (sessionStorage.getItem('settings_access_granted') !== 'true') {
+        alert('접근 권한이 없습니다. 메인 페이지로 돌아갑니다.');
+        window.location.href = 'index.html';
+      }
+    })();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('startDate').value = today;
+        document.getElementById('endDate').value = today;
+    });
+
+    document.getElementById('encryptBackup').addEventListener('change', function() {
+        const keyContainer = document.getElementById('encryptionKeyContainer');
+        if (this.checked) {
+            keyContainer.classList.remove('hidden');
+        } else {
+            keyContainer.classList.add('hidden');
+        }
+    });
+    
+    document.getElementById('reportBtn').addEventListener('click', () => {
+      const from = document.getElementById('startDate').value;
+      const to = document.getElementById('endDate').value;
+
+      if (!from || !to) {
+        alert('시작일과 종료일을 모두 선택해주세요.');
+        return;
+      }
+
+      fetch(`/api/report?from=${from}&to=${to}`)
+        .then(res => {
+          if (!res.ok) throw new Error('서버 응답 오류');
+          return res.json();
+        })
+        .then(data => {
+          const tbody = document.getElementById('reportTableBody');
+          tbody.innerHTML = '';
+
+          const renderSignature = (signData) => {
+              if (!signData) return '-';
+              return `<img src="${signData}" alt="서명" class="signature-img">`;
+          };
+
+          if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="12" class="text-center">해당 기간의 출입 기록이 없습니다.</td></tr>';
+          } else {
+            let sequence = 1;
+            data.forEach(item => {
+              const entryDateTime = new Date(item.entry_time).toLocaleString('ko-KR');
+              const exitDateTime = item.exit_time ? new Date(item.exit_time).toLocaleString('ko-KR') : '-';
+              
+              const row = `
+                <tr>
+                  <td>${sequence++}</td>
+                  <td>${item.name || '-'}</td>
+                  <td>${renderSignature(item.entry_sign)}</td>
+                  <td>${item.company || '-'}</td>
+                  <td>${entryDateTime}</td>
+                  <td>${exitDateTime}</td>
+                  <td>${item.reason || '-'}</td>
+                  <td>${item.witness_name || '-'}</td>
+                  <td>${item.witness_team || '-'}</td>
+                  <td>${renderSignature(item.witness_sign)}</td>
+                  <td>${item.checker_name || '-'}</td>
+                  <td>${renderSignature(item.checker_sign)}</td>
+                </tr>
+              `;
+              tbody.insertAdjacentHTML('beforeend', row);
+            });
+          }
+          document.getElementById('reportResult').classList.remove('hidden');
+        })
+        .catch(err => {
+          console.error('Report fetch error:', err);
+          alert('보고서 조회 중 오류가 발생했습니다.');
+        });
+    });
+
+    document.getElementById('printPreviewBtn').addEventListener('click', () => {
+        const reportResult = document.getElementById('reportResult');
+        if (reportResult.classList.contains('hidden')) {
+            alert('먼저 보고서 내용을 조회해주세요.');
+            return;
+        }
+
+        const from = document.getElementById('startDate').value;
+        const to = document.getElementById('endDate').value;
+        
+        const reportTableHtml = reportResult.querySelector('.table-responsive').innerHTML;
+        const printHtml = `
+            <!DOCTYPE html>
+            <html lang="ko">
+            <head>
+                <meta charset="UTF-8">
+                <title>출입기록 보고서 인쇄</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { 
+                        font-family: 'Noto Sans KR', sans-serif; 
+                        -webkit-print-color-adjust: exact;
+                        color-adjust: exact;
+                    }
+                    .signature-img { width: 100px; height: 50px; object-fit: contain; }
+                    .container-fluid { padding: 2rem; }
+                    h3, p { text-align: center; margin-bottom: 1rem; }
+                    .table-light { background-color: #f8f9fa !important; }
+
+                    /* =========== [수정된 부분] 새 창의 테이블 정렬 스타일 =========== */
+                    .table th, .table td {
+                        text-align: center;
+                        vertical-align: middle;
+                    }
+                    /* ======================================================== */
+                </style>
+            </head>
+            <body>
+                <div class="container-fluid">
+                    <h3>출입 기록 보고서</h3>
+                    <p>조회 기간: ${from} ~ ${to}</p>
+                    ${reportTableHtml}
+                </div>
+            </body>
+            </html>
+        `;
+
+        const newWindow = window.open('', '_blank');
+        newWindow.document.write(printHtml);
+        newWindow.document.close();
+    });
+
+    document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+        const currentPasswordEl = document.getElementById('currentPassword');
+        const newPasswordEl = document.getElementById('newPassword');
+        const confirmPasswordEl = document.getElementById('confirmPassword');
+
+        const currentPassword = currentPasswordEl.value;
+        const newPassword = newPasswordEl.value;
+        const confirmPassword = confirmPasswordEl.value;
+        
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('모든 필드를 입력해주세요.');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            alert('새 비밀번호와 확인 비밀번호가 일치하지 않습니다.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/change-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword, newPassword })
+            });
+
+            const result = await response.json();
+            alert(result.message);
+
+            if (response.ok) {
+                currentPasswordEl.value = '';
+                newPasswordEl.value = '';
+                confirmPasswordEl.value = '';
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('서버와 통신 중 오류가 발생했습니다.');
+        }
+    });
+    
+    document.getElementById('manualBackupBtn').addEventListener('click', async () => {
+        const encryptCheckbox = document.getElementById('encryptBackup');
+        const encryptionKeyInput = document.getElementById('encryptionKey');
+
+        const backupData = {
+            host: document.getElementById('dbHost').value,
+            user: document.getElementById('dbUser').value,
+            password: document.getElementById('dbPassword').value,
+            database: document.getElementById('dbName').value,
+            table: document.getElementById('backupTable').value,
+            backupPath: document.getElementById('backupPath').value,
+            encrypt: encryptCheckbox.checked,
+            encryptionKey: encryptionKeyInput.value
+        };
+        
+        if (!backupData.host || !backupData.user || !backupData.database || !backupData.backupPath) {
+            alert('백업에 필요한 기본 정보를 모두 입력해주세요.');
+            return;
+        }
+        
+        if (backupData.encrypt && !backupData.encryptionKey) {
+            alert('암호화를 선택한 경우, 암호화 키를 반드시 입력해야 합니다.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/backup/mysql', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(backupData)
+            });
+
+            const result = await response.json();
+            alert(result.message);
+
+            if(response.ok) {
+                 const now = new Date();
+                 document.getElementById('lastBackupStatus').textContent = `최근 백업: ${now.toLocaleString('ko-KR')}`;
+            }
+
+        } catch (error) {
+            console.error('Backup Error:', error);
+            alert('백업 실행 중 서버와 통신 오류가 발생했습니다.');
+        }
+    });
+  </script>
+</body>
+</html>

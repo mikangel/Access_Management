@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>운영실 출입관리 - 퇴실 등록</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sidebar-bg-color: #1a253c;
+      --main-bg-color: #f4f7fc;
+      --card-bg-color: #ffffff;
+      --primary-accent-color: #4a6cf7;
+      --danger-accent-color: #dc3545;
+      --text-color-light: #f8f9fa;
+      --text-color-dark: #343a40;
+      --text-color-muted: #6c757d;
+    }
+
+    body, html {
+      height: 100%;
+      margin: 0;
+      background-color: var(--main-bg-color);
+      font-family: 'Noto Sans KR', sans-serif;
+    }
+
+    .main-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 280px;
+      background-color: var(--sidebar-bg-color);
+      color: var(--text-color-light);
+      padding: 40px 0px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .sidebar a {
+        text-decoration: none;
+        color: var(--text-color-light);
+    }
+
+    .sidebar h2 {
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: -1px;
+    }
+    
+    .sidebar p {
+      font-size: 0.9rem;
+      opacity: 0.7;
+    }
+
+    .sidebar-submenu a {
+      display: block;
+      width: 100%;
+      color: #f8f9fa;
+      text-decoration: none;
+      padding: 10px 0 10px 52px;
+      box-sizing: border-box;
+      transition: background-color 0.2s ease;
+    }
+
+    .sidebar-submenu a:hover,
+    .sidebar-submenu a.active {
+      background-color: rgba(255, 255, 255, 0.25);
+      font-weight: bold;
+    }
+
+    .content-area {
+      flex-grow: 1;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .content-card {
+      background-color: var(--card-bg-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 40px;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .content-card h2 {
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+      color: var(--text-color-dark);
+    }
+    
+    .table-responsive {
+        margin-bottom: 2rem;
+    }
+    
+    .table thead {
+        background-color: #e9ecef;
+    }
+
+    #entryTable tbody tr.selected {
+        background-color: #d3d9f0;
+        font-weight: 500;
+    }
+    
+    .exit-section {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+    }
+
+    .query-section {
+        background-color: #e8f4f8;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+    }
+
+    .btn-select {
+        font-size: 0.8rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .loading-spinner {
+        display: none;
+    }
+
+    /* 서명 패드 스타일 */
+    .signature-container {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+
+    .signature-pad {
+      border: 2px dashed #dee2e6;
+      border-radius: 5px;
+      cursor: crosshair;
+      background-color: #ffffff;
+      width: 100%;
+      height: 120px;
+      transition: border-color 0.3s;
+    }
+
+    .signature-pad:hover {
+      border-color: var(--primary-accent-color);
+    }
+    
+    .signature-pad.disabled {
+        background-color: #e9ecef;
+        cursor: not-allowed;
+    }
+
+    .signature-pad.signing {
+      border-color: var(--primary-accent-color);
+      border-style: solid;
+    }
+
+    .signature-controls {
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .signature-hint {
+      font-size: 0.85rem;
+      color: var(--text-color-muted);
+    }
+
+    .clear-signature {
+      background: none;
+      border: none;
+      color: #dc3545;
+      font-size: 0.85rem;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .clear-signature:hover {
+      color: #c82333;
+    }
+
+
+    @media (max-width: 992px) {
+      .main-container {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        height: auto;
+        position: static;
+        padding: 20px;
+      }
+      .content-area {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <div class="sidebar">
+      <a href="index.html">
+        <h2>운영실 출입관리</h2>
+        <p>Access Management System</p>
+      </a>
+      <div style="margin-top: 20px; font-size: 1.2rem; text-align: left; width: 100%;">
+        <ul class="list-unstyled sidebar-submenu">
+          <li><a href="/register.html">ㆍ출입 등록</a></li>
+          <li><a href="/exit.html" class="active">ㆍ퇴실 등록</a></li>
+          <li><a href="/verify.html">ㆍ책임자 확인</a></li>
+          <li><a href="#" onclick="goToSettings()">ㆍ설정</a></li>
+        </ul>  
+      </div>      
+    </div>
+    <div class="content-area">
+      <div class="content-card">
+        <h2>퇴실 등록</h2>
+        
+        <div class="query-section border p-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">현재 출입중인 인원 조회</h5>
+            <button class="btn btn-primary" id="refreshData">
+              <span class="loading-spinner spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+              조회하기
+            </button>
+          </div>
+          <p class="mb-0 mt-2 text-muted">최신 출입 현황을 조회하려면 조회하기 버튼을 클릭하세요.</p>
+        </div>
+
+        <div class="mb-4">
+            <p class="mb-2"><strong>현재 출입중인 인원 목록</strong></p>
+            <div class="table-responsive">
+                <table class="table table-hover table-bordered" id="entryTable">
+                  <thead class="table-light">
+                    <tr>
+                      <th width="80">선택</th>
+                      <th>출입자</th>
+                      <th>소속</th>
+                      <th>출입일</th>
+                      <th>입실시간</th>
+                      <th>출입사유</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colspan="6" class="text-center text-muted">조회하기 버튼을 클릭하여 현재 출입중인 인원을 확인하세요.</td>
+                    </tr>
+                  </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="exit-section border p-3">
+          <h5 class="mb-3">퇴실자 확인 및 서명</h5>
+          <div class="row">
+              <div class="col-md-7">
+                  <div class="mb-3">
+                      <label class="form-label fw-bold">선택된 출입자</label>
+                      <p id="selectedName" class="fs-5 text-primary">선택된 인원 없음</p>
+                  </div>
+                  <div class="mb-3">
+                      <label class="form-label fw-bold">선택 소속</label>
+                      <p id="selectedCompany" class="fs-6 text-secondary">-</p>
+                  </div>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label">퇴실자 서명</label>
+                <div class="signature-container">
+                  <canvas class="signature-pad" id="exitSignaturePad"></canvas>
+                  <div class="signature-controls">
+                    <span class="signature-hint">마우스로 드래그하여 서명해주세요</span>
+                    <button type="button" class="clear-signature" onclick="clearSignature('exitSignaturePad')">지우기</button>
+                  </div>
+                </div>
+                <input type="hidden" id="exitSignatureData">
+              </div>
+          </div>
+          <div class="d-grid mt-3">
+            <button class="btn btn-danger btn-lg" id="confirmExit" disabled>선택 인원 퇴실 처리</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedId = null;
+    let currentEntries = [];
+
+    /**
+     * === 이름 마스킹 함수 추가 ===
+     * 이름을 받아 중간 글자를 *로 바꿉니다.
+     * @param {string} name - 마스킹할 이름
+     * @returns {string} 마스킹된 이름
+     */
+    function maskName(name) {
+      if (!name || name.length <= 1) {
+        return name;
+      }
+      // 이름이 2글자인 경우
+      if (name.length === 2) {
+        return name[0] + '*';
+      }
+      // 이름이 3글자 이상인 경우 (첫 글자와 마지막 글자만 빼고 모두 * 처리)
+      const middle = '*'.repeat(name.length - 2);
+      return name[0] + middle + name[name.length - 1];
+    }
+
+    // 데이터를 조회하는 함수
+    function loadCurrentEntries() {
+      const refreshBtn = document.getElementById('refreshData');
+      const spinner = refreshBtn.querySelector('.loading-spinner');
+      
+      refreshBtn.disabled = true;
+      spinner.style.display = 'inline-block';
+      
+      fetch('/api/data')
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector('#entryTable tbody');
+          tbody.innerHTML = '';
+          currentEntries = data.filter(item => !item.exit_time);
+
+          if (currentEntries.length === 0) {
+              const row = document.createElement('tr');
+              row.innerHTML = `<td colspan="6" class="text-center text-muted">현재 출입중인 인원이 없습니다.</td>`;
+              tbody.appendChild(row);
+          } else {
+              currentEntries.forEach(item => {
+                const row = document.createElement('tr');
+                const entryDateTime = new Date(item.entry_time);
+                const entryDate = entryDateTime.toLocaleDateString('ko-KR');
+                const entryTime = entryDateTime.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+                row.innerHTML = `
+                  <td><button class="btn btn-outline-primary btn-select" data-id="${item.id}">선택</button></td>
+                  <td>${maskName(item.name)}</td> <td>${item.company}</td>
+                  <td>${entryDate}</td>
+                  <td>${entryTime}</td>
+                  <td>${item.reason}</td>
+                `;
+                tbody.appendChild(row);
+              });
+
+              document.querySelectorAll('.btn-select').forEach(btn => {
+                btn.addEventListener('click', function() {
+                  const itemId = this.getAttribute('data-id');
+                  selectPerson(itemId);
+                });
+              });
+          }
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+            const tbody = document.querySelector('#entryTable tbody');
+            tbody.innerHTML = `<td colspan="6" class="text-center text-danger">데이터를 불러오는 중 오류가 발생했습니다.</td>`;
+        })
+        .finally(() => {
+          refreshBtn.disabled = false;
+          spinner.style.display = 'none';
+        });
+    }
+
+    // 인원을 선택하는 함수
+    function selectPerson(itemId) {
+      const selectedItem = currentEntries.find(item => item.id == itemId);
+      if (!selectedItem) return;
+
+      document.querySelectorAll('#entryTable tbody tr').forEach(row => {
+        row.classList.remove('selected');
+      });
+
+      document.querySelectorAll('.btn-select').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-primary');
+        btn.textContent = '선택';
+      });
+
+      const selectedButton = document.querySelector(`[data-id="${itemId}"]`);
+      const selectedRow = selectedButton.closest('tr');
+      
+      selectedRow.classList.add('selected');
+      selectedButton.classList.remove('btn-outline-primary');
+      selectedButton.classList.add('btn-primary');
+      selectedButton.textContent = '선택됨';
+
+      selectedId = itemId;
+      // 선택된 이름 표시 부분에 마스킹 적용
+      document.getElementById('selectedName').textContent = maskName(selectedItem.name);
+      document.getElementById('selectedCompany').textContent = selectedItem.company;
+      
+      document.getElementById('exitSignaturePad').classList.remove('disabled');
+      document.getElementById('confirmExit').disabled = false;
+    }
+
+    // 선택 해제 함수
+    function clearSelection() {
+      selectedId = null;
+      document.getElementById('selectedName').textContent = '선택된 인원 없음';
+      document.getElementById('selectedCompany').textContent = '-';
+      
+      clearSignature('exitSignaturePad');
+      document.getElementById('exitSignaturePad').classList.add('disabled');
+      document.getElementById('confirmExit').disabled = true;
+      
+      document.querySelectorAll('#entryTable tbody tr').forEach(row => {
+        row.classList.remove('selected');
+      });
+      document.querySelectorAll('.btn-select').forEach(btn => {
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-outline-primary');
+        btn.textContent = '선택';
+      });
+    }
+
+    document.getElementById('refreshData').addEventListener('click', () => {
+      clearSelection();
+      loadCurrentEntries();
+    });
+
+    document.getElementById('confirmExit').addEventListener('click', () => {
+      const sign = document.getElementById('exitSignatureData').value;
+      
+      if (!selectedId) {
+        alert('퇴실할 인원을 먼저 선택하세요.');
+        return;
+      }
+      if (!sign) {
+        alert('퇴실자 서명을 입력하세요.');
+        return;
+      }
+
+      const selectedName = document.getElementById('selectedName').textContent;
+      if (!confirm(`${selectedName}님의 퇴실 처리를 진행하시겠습니까?`)) {
+        return;
+      }
+
+      const confirmBtn = document.getElementById('confirmExit');
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = '처리중...';
+
+      fetch(`/api/exit/${selectedId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ exit_sign: sign })
+      })
+      .then(res => {
+        if (res.ok) {
+          alert('퇴실 처리가 완료되었습니다.');
+          clearSelection();
+          loadCurrentEntries();
+        } else {
+          res.json().then(errorData => {
+             alert('퇴실 처리 실패: ' + (errorData.message || '서버 오류'));
+          });
+        }
+      })
+      .catch(error => {
+          console.error('Error on exit:', error);
+          alert('퇴실 처리 중 오류가 발생했습니다.');
+      })
+      .finally(() => {
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '선택 인원 퇴실 처리';
+      });
+    });
+
+    // 서명 패드 관련 함수들
+    function initSignaturePad(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * window.devicePixelRatio;
+        canvas.height = rect.height * window.devicePixelRatio;
+        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        function getMousePos(canvas, e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX = e.clientX;
+            let clientY = e.clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+
+            return [clientX - rect.left, clientY - rect.top];
+        }
+
+        function startDrawing(e) {
+            if (canvas.classList.contains('disabled')) return;
+            isDrawing = true;
+            canvas.classList.add('signing');
+            [lastX, lastY] = getMousePos(canvas, e);
+        }
+
+        function draw(e) {
+            if (!isDrawing || canvas.classList.contains('disabled')) return;
+            e.preventDefault();
+
+            const [currentX, currentY] = getMousePos(canvas, e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(currentX, currentY);
+            ctx.stroke();
+            [lastX, lastY] = [currentX, currentY];
+        }
+
+        function stopDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            canvas.classList.remove('signing');
+            updateSignatureData(canvasId);
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function updateSignatureData(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const dataURL = canvas.toDataURL('image/png');
+        document.getElementById('exitSignatureData').value = dataURL;
+    }
+
+    function clearSignature(canvasId) {
+        const canvas = document.getElementById(canvasId);
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('exitSignatureData').value = '';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initSignaturePad('exitSignaturePad');
+      clearSelection();
+    });
+  
+  // ✅ [추가] 설정 페이지 이동 시 비밀번호를 묻는 함수
+  async function goToSettings() {
+    const enteredPassword = prompt('설정 페이지에 접근하려면 비밀번호를 입력하세요.');
+
+    // 사용자가 '취소'를 누르거나 아무것도 입력하지 않은 경우 함수 종료
+    if (!enteredPassword) {
+      return;
+    }
+
+    try {
+      // 서버의 /api/login 으로 비밀번호 확인 요청
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: enteredPassword }),
+      });
+
+      if (response.ok) {
+        // 인증 성공 시, settings.html이 접근을 허용하도록 sessionStorage에 플래그 저장
+        sessionStorage.setItem('settings_access_granted', 'true');
+        // settings.html 페이지로 이동
+        window.location.href = '/settings.html';
+      } else {
+        // 인증 실패 시 서버가 보낸 에러 메시지 표시
+        const result = await response.json();
+        alert(result.message || '인증에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('로그인 요청 오류:', error);
+      alert('서버와 통신 중 오류가 발생했습니다. 서버가 실행 중인지 확인해 주세요.');
+    }
+  }  
+
+  </script>
+</body>
+</html>
