@@ -112,6 +112,23 @@ pip install -r requirements.txt
 CREATE DATABASE access_log CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- 테이블 생성 (server.js에서 자동 생성됨)
+CREATE TABLE entry_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255),
+    company VARCHAR(255),
+    reason TEXT,
+    plan_number VARCHAR(255),
+    entry_sign TEXT,
+    witness_name VARCHAR(255),
+    witness_team VARCHAR(255),
+    witness_sign TEXT,
+    entry_time DATETIME,
+    exit_time DATETIME NULL,
+    exit_sign TEXT NULL,
+    checker_name VARCHAR(255) NULL,
+    checker_team VARCHAR(255) NULL,
+    checker_sign TEXT NULL
+);
 ```
 
 ### 5. 서버 실행
